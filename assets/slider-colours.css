@@ -1,0 +1,25 @@
+/* generic look: thicker bar */
+.rc-slider-track, .rc-slider-rail {
+    height: 8px !important;
+  }
+  .rc-slider-handle {
+    border: none !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-top: -5px !important;
+    box-shadow: 0 0 2px #000;
+  }
+  
+  /* individual colours */
+  .orange-slider .rc-slider-track  { background: #ff9800; }
+  .orange-slider .rc-slider-handle { background: #ff9800; }
+  
+  .blue-slider   .rc-slider-track  { background: #2196f3; }
+  .blue-slider   .rc-slider-handle { background: #2196f3; }
+  
+  .purple-slider .rc-slider-track  { background: #9c27b0; }
+  .purple-slider .rc-slider-handle { background: #9c27b0; }
+  
+  .teal-slider   .rc-slider-track  { background: #009688; }
+  .teal-slider   .rc-slider-handle { background: #009688; }
+  
