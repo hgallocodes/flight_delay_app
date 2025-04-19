@@ -1,0 +1,11 @@
+/* assets/borders.css  ────────────────────────────────────────────── */
+.glass-card {
+    border: 2px solid rgba(255,255,255,0.08);   /* faint light outline */
+    border-radius: 12px;
+    backdrop-filter: blur(2px);                 /* frosted‑glass vibe  */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.45);
+}
+
+.glass-card-dark-bg {
+    background-color: rgba(0,0,0,0.40);         /* dark translucent bg */
+}

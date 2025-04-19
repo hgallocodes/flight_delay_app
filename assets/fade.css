@@ -1,0 +1,9 @@
+/* assets/fade.css */
+#page-content {
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+}
+
+#page-content.loaded {
+    opacity: 1;
+}
