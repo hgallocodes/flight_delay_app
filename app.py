@@ -33,7 +33,6 @@ usa_airports = coords_df.loc[coords_df["country"] == "USA",
                              ["iata_code", "airport_name", "city",
                               "lat_dec", "lon_dec"]]
 
-# keep only the columns we need → faster merges
 usa_airports.rename(columns={"lat_dec": "lat", "lon_dec": "lon"},
                     inplace=True)
 
@@ -127,8 +126,8 @@ airport_coords = {
 try:
     encoder = OneHotEncoder(drop=None,
                             handle_unknown="ignore",
-                            sparse_output=False)   # new keyword
-except TypeError:                                   # old sklearn
+                            sparse_output=False)   
+except TypeError:                                   
     encoder = OneHotEncoder(drop=None,
                             handle_unknown="ignore",
                             sparse=False)        
@@ -157,7 +156,7 @@ def build_airline_map(carrier_code: str, user_dest: str | None = None) -> go.Fig
 
     fig = go.Figure()
 
-    # flight paths ────────────────────────────────────────
+    # flight paths
     for _, r in summary.iterrows():
         fig.add_trace(go.Scattergeo(
             lon=[df["origin_lon"].iat[0], r.lon],
@@ -168,7 +167,7 @@ def build_airline_map(carrier_code: str, user_dest: str | None = None) -> go.Fig
             showlegend=False,
         ))
 
-    # all US airports (faint backdrop)
+    # all US airports
     fig.add_trace(go.Scattergeo(
         lon=usa_airports["lon"], lat=usa_airports["lat"],
         mode="markers", marker=dict(size=5, color="steelblue", opacity=0.25),
@@ -190,7 +189,7 @@ def build_airline_map(carrier_code: str, user_dest: str | None = None) -> go.Fig
         hoverinfo="text", name="Destinations",
     ))
 
-    # highlighted destination (yellow ring) ───────────────
+    # highlighted destination (yellow ring)
     if user_dest in summary["destination_airport"].values:
         sel = summary.loc[summary["destination_airport"].eq(user_dest)].iloc[0]
         fig.add_trace(go.Scattergeo(
@@ -199,7 +198,7 @@ def build_airline_map(carrier_code: str, user_dest: str | None = None) -> go.Fig
                         color="rgba(0,0,0,0)", line=dict(width=3, color="#FFD600")),
             hoverinfo="skip", showlegend=False,
         ))
-    elif user_dest in airport_coords:  # fly‑to not in data
+    elif user_dest in airport_coords:  
         d_lat, d_lon = airport_coords[user_dest]
         fig.add_trace(go.Scattergeo(lon=[-118.4085, d_lon], lat=[33.9416, d_lat],
                                     mode="lines", line=dict(width=1, color="grey", dash="dot"),
@@ -230,12 +229,10 @@ def build_airline_map(carrier_code: str, user_dest: str | None = None) -> go.Fig
     return fig
 
 
-# Instantiate the Dash app (using a dark Bootswatch theme for example)
+# Instantiate the app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG], suppress_callback_exceptions=True)
 
-########################################
-# 1. Setup Logging Directory and Log Path
-########################################
+# Setup Logging Directory and Log Path
 logs_dir = "logs"
 if not os.path.exists(logs_dir):
     os.makedirs(logs_dir)
@@ -249,9 +246,7 @@ if not os.path.exists(log_path):
         'precipitation_sum (mm)', 'wind_speed_10m_max (km/h)', 'probability_of_delay'
     ]).to_csv(log_path, index=False)
 
-########################################
-# 2. Load Your Data from "data" Folder
-########################################
+# Load data
 AA = pd.read_csv('data/AA.csv')
 AS = pd.read_csv('data/AS.csv')
 DL = pd.read_csv('data/DL.csv')
@@ -285,9 +280,8 @@ data["is_weekday"] = (data["flight_date_pd"].dt.weekday < 5).astype(int)
 data["is_holiday"] = data["flight_date_pd"].apply(lambda x: 1 if x in us_holidays else 0)
 data["year"] = data["flight_date_pd"].dt.year
 
-########################################
-# 3. Feature Selection & One-Hot Encoding
-########################################
+# Feature Selection & One-Hot Encoding
+
 features = [
     'Carrier Code', 'destination_airport', 'scheduled_dep_hour',
     'month', 'day', 'scheduled_elapsed', 'is_holiday', 'is_weekday',
@@ -315,9 +309,7 @@ X_encoded = pd.concat([X, encoded_df], axis=1).drop(columns=['Carrier Code', 'de
 X_encoded = X_encoded.reset_index(drop=True)
 y = y.reset_index(drop=True)
 
-########################################
-# 4. Balance & Split the Dataset
-########################################
+# Balance & Split the Dataset
 delayed_mask = y == 1
 X_delayed = X_encoded[delayed_mask]
 y_delayed = y[delayed_mask]
@@ -338,9 +330,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 features_encoded = X_balanced.columns
 
-########################################
-# 5. Train the XGBoost Model
-########################################
+# Train the XGBoost Model
 xgb_classifier = xgb.XGBClassifier(random_state=42)
 xgb_classifier.fit(X_train, y_train)
 y_pred = xgb_classifier.predict(X_test)
@@ -351,10 +341,7 @@ importances = xgb_classifier.feature_importances_
 feature_importance_df = pd.DataFrame({'Feature': features_encoded, 'Importance': importances})
 print("Feature Importances:\n", feature_importance_df.sort_values(by='Importance', ascending=False))
 
-########################################
-# 6. Build Carrier Logo Buttons Dynamically
-########################################
-# Define the order in which carriers appear (adjust as needed)
+# Build Carrier Logo Buttons Dynamically
 def approximate_zoom(lax_lat, lax_lon, dest_lat, dest_lon):
     """
     Returns a rough zoom level to ensure the entire path is visible.
@@ -364,9 +351,8 @@ def approximate_zoom(lax_lat, lax_lon, dest_lat, dest_lon):
     lon_dist = abs(dest_lon - lax_lon)
     max_dist = max(lat_dist, lon_dist)
 
-    # Example thresholds (in degrees) - Tweak to your liking:
     if max_dist < 4:
-        return 6   # close
+        return 6   
     elif max_dist < 8:
         return 5
     elif max_dist < 15:
@@ -374,10 +360,9 @@ def approximate_zoom(lax_lat, lax_lon, dest_lat, dest_lon):
     elif max_dist < 25:
         return 3
     else:
-        return 2   # very far (e.g., LAX -> ANC or LAX -> HNL)
+        return 2 
 
 unique_carriers = sorted(data["Carrier Code"].dropna().unique())
-# (Optional: If you want to split carriers into rows of three manually, define your groups too)
 first_row_carriers = ["AA", "DL", "UA"]  
 second_row_carriers = ["WN", "AS", "B6"]  
 third_row_carriers = ["NK"]
@@ -385,8 +370,6 @@ third_row_carriers = ["NK"]
 unique_destinations = sorted(data["destination_airport"].dropna().unique())
 print(unique_destinations)
 
-
-# Optionally, set a consistent ordering:
 displayed_carriers = first_row_carriers + second_row_carriers + third_row_carriers
 
 def create_carrier_button(carrier):
@@ -404,7 +387,7 @@ def create_carrier_button(carrier):
         style={
             "width": "250px",
             "height": "150px",
-            "backgroundColor": "#616161",  # your chosen lighter gray
+            "backgroundColor": "#616161",  
             "border": "none",
             "margin": "0.5rem",
             "display": "flex",
@@ -415,7 +398,6 @@ def create_carrier_button(carrier):
 
 def create_dest_button(airport_code):
     return dbc.Button(
-        # Just text or an icon for the airport
         f"{airport_code}",
         id={"type": "dest-button", "index": airport_code},
         color="link",
@@ -437,7 +419,7 @@ def chunk(lst, n):
         yield lst[i:i+n]
 
 
-# Build buttons for each row based on the defined order
+# Build buttons
 def build_carrier_rows(carriers, buttons_per_row):
     rows = []
     for group in chunk(carriers, buttons_per_row):
@@ -455,7 +437,6 @@ def build_destination_rows(dest_list, buttons_per_row=3):
     rows = []
     for group in chunk(dest_list, buttons_per_row):
         row_buttons = [create_dest_button(dest) for dest in group]
-        # One row per chunk
         rows.append(
             dbc.Row(
                 [dbc.Col(btn, width="auto") for btn in row_buttons],
@@ -469,9 +450,7 @@ destination_rows = build_destination_rows(unique_destinations, 8)
 
 carrier_rows = build_carrier_rows(displayed_carriers, 3)
 
-########################################
-# 7. Define Helper Function for Inputs
-########################################
+# Define Helper Function for Inputs
 def labeled_input(label, input_component):
     return dbc.Col(
         [
@@ -482,11 +461,9 @@ def labeled_input(label, input_component):
         className="mb-3"
     )
 
-########################################
-# 8. Multi-Page Wizard: Page Layouts
-########################################
+# Multi-Page Wizard: Page Layouts
 
-# Page 0: Title/Welcome page
+# Page 0
 page0_layout = dbc.Container(
     className="vh-100 d-flex flex-column justify-content-center align-items-center text-center",
     fluid=True,
@@ -500,10 +477,10 @@ page0_layout = dbc.Container(
     ]
 )
 
-# Page 1: Airline Selection
+# Page 1
 page1_layout = dbc.Container([
     html.H2("Step 1: Select Your Airline", className="text-center my-3"),
-    *carrier_rows,  # Unpack all rows
+    *carrier_rows, 
     html.Br(),
     dbc.Row([
         dbc.Col(
@@ -517,11 +494,8 @@ page1_layout = dbc.Container([
     ])
 ], fluid=True)
 
-# Page 2: Flight Details Input (only Destination)
-# Page 2: Flight Details Input (Destination Only)
-# Page 2: Flight Details Input (only Destination)
+# Page 2
 page2_layout = dbc.Container([
-    # Title row (centered)
     dbc.Row([
         dbc.Col(
             html.H2("Step 2: Enter Destination", className="text-center my-3"),
@@ -529,17 +503,15 @@ page2_layout = dbc.Container([
         )
     ], justify="center"),
 
-    # Main row: The map (9 columns) + Destination dropdown (3 columns)
     dbc.Row([
-        # Left column: the map, inside a card with "contour"
         dbc.Col(
             dbc.Card(
                 dbc.CardBody([
                     dcc.Graph(
                         id='lax-dest-map',
                         style={
-                            "height": "600px",  # not too tall
-                            "width":  "1000px"  # moderate width
+                            "height": "600px",  
+                            "width":  "1000px"  
                         }
                     )
                 ]),
@@ -548,11 +520,10 @@ page2_layout = dbc.Container([
                     "boxShadow": "0 4px 8px rgba(0,0,0,0.2)"
                 }
             ),
-            md=9,  # 9 of 12 columns for the map
+            md=9, 
             className="d-flex justify-content-center mb-3"
         ),
 
-        # Right column: narrower area for the dropdown
         dbc.Col([
             dbc.Label("Destination Airport", className="mb-2 text-center"),
             dcc.Dropdown(
@@ -577,7 +548,6 @@ page2_layout = dbc.Container([
         )
     ], justify="center"),
 
-    # Bottom row: Back & Next buttons
     dbc.Row([
         dbc.Col(
             dcc.Link("Back: Select Airline", href="/page1", className="btn btn-secondary"),
@@ -595,11 +565,7 @@ page2_layout = dbc.Container([
 
 
 
-# Page 3: Flight Details Input (other fields)
-# ─── Page 3: Flight‑detail form ──────────────────────────────────────────
-# ─── Nicer, aligned Page‑3 layout ──────────────────────────────────────
-# keep your existing slider definitions but assign them variables so we can
-# reuse them cleanly in the layout
+# Page 3
 temp_slider   = dcc.Slider(id="temp",   min=-20, max=50,  step=1, value=20,
                            marks={-20:"-20",0:"0",20:"20",40:"40",50:"50"},
                            tooltip={"always_visible":True},
@@ -618,23 +584,14 @@ wind_slider   = dcc.Slider(id="wind",   min=0,   max=120, step=1, value=10,
                            className="teal-slider")
 
 
-# ───────────────────────────────────────────────────────────────────
-#  Page 3  ▸  one‑column form  (date → time → duration → switches …)
-# ───────────────────────────────────────────────────────────────────
-# sliders declared earlier (temp_slider, rain_slider, precip_slider, wind_slider)
-# ───────────────────────────────────────────────────────────────
-#  Page 3  –  stacked form, with first row of 3 controls
-# ───────────────────────────────────────────────────────────────
 page3_layout = dbc.Container(
     fluid=True,
     children=[
         html.H2("Step 3: Enter Other Flight Details",
                 className="text-center my-4"),
 
-        # centre the whole form
         dbc.Col(md=8, className="mx-auto", children=[
 
-            # ░░ Row 1  ▸  date • time • duration ░░
             dbc.Row([
                 dbc.Col([
                     dbc.Label("Flight Date", className="fw-bold"),
@@ -659,7 +616,6 @@ page3_layout = dbc.Container(
                 ], md=4)
             ], className="mb-4"),
 
-            # ░░ Row 2  ▸  holiday / weekday switches ░░
             dbc.Row([
                 dbc.Col(dbc.Checklist(
                     options=[{"label": " Holiday?", "value": 1}],
@@ -671,7 +627,6 @@ page3_layout = dbc.Container(
                 ), md=6)
             ], className="mb-4"),
 
-            # ░░ Sliders ░░
             dbc.Row([
                 dbc.Label("Temperature (°C)", className="fw-bold"),
                 temp_slider
@@ -693,7 +648,6 @@ page3_layout = dbc.Container(
             ], className="mb-4"),
         ]),
 
-        # navigation buttons
         dbc.Row([
             dbc.Col(dcc.Link("← Back", href="/page2",
                              className="btn btn-secondary w-100"), md=4),
@@ -707,18 +661,14 @@ page3_layout = dbc.Container(
 
 
 
-# Page 4: Final Prediction Page
-# --- replace the whole page4_layout block --------------------------
-# ─── page 4: prediction + optional editor ───────────────────────────
+# Page 4
 page4_layout = dbc.Container(
     fluid=True,
     children=[
 
-        # ── headline ───────────────────────────────────────────
         html.H2("Step 4: Flight Prediction",
                 className="text-center my-3"),
 
-        # ── toolbar (Predict / Edit) ───────────────────────────
         dbc.Row(
     [
         dbc.Col(
@@ -727,13 +677,12 @@ page4_layout = dbc.Container(
             width="auto"
         ),
 
-        dbc.Col(                                   # ← Edit‑mode toggle
+        dbc.Col(                                 
             dbc.Button("Edit inputs", id="edit-btn",
                        n_clicks=0, color="secondary"),
             width="auto"
         ),
 
-        # ⓘ tiny white note
         dbc.Col(
             html.Span("(green = edit mode | grey = view mode)",
                       style={"color":"#fff",
@@ -746,10 +695,7 @@ page4_layout = dbc.Container(
 )
 ,
 
-        # ── placeholder the callback fills with the report+map ─
         html.Div(id="prediction-output"),
-
-        # ── navigation footer ─────────────────────────────────
         html.A(
     "← Back",
     href="/page3",
@@ -762,28 +708,23 @@ page4_layout = dbc.Container(
     }
 ),
 
-        # ── off‑canvas quick‑edit panel ───────────────────────
         
     ]
 )
 
 
 
-########################################
-# 9. Main Multi-Page Layout
-########################################
+# Main Multi-Page Layout
 app.layout = html.Div([
     dcc.Location(id="url", refresh=False),
     dcc.Store(id="selected-carrier-store", data=unique_carriers[0] if unique_carriers else None),
     dcc.Store(id="flight-details-store"),
-    dcc.Store(id="edit-mode-store", data=False),   # ⇽ False = read‑only
+    dcc.Store(id="edit-mode-store", data=False),  
     html.Div(id="page-content"),
     html.Div(id="dummy-output", style={"display": "none"})
 ])
 
-########################################
-# 10. Navigation / Page Loading Callback
-########################################
+# Navigation 
 
 
 
@@ -796,7 +737,6 @@ app.layout = html.Div([
 )
 def update_map(selected_dest):
     if not selected_dest or selected_dest not in airport_coords or "LAX" not in airport_coords:
-        # Return a default figure if no valid selection
         fig = go.Figure()
         fig.update_layout(
             mapbox=dict(
@@ -808,16 +748,13 @@ def update_map(selected_dest):
         )
         return fig
 
-    # Coordinates
     lax_lat, lax_lon = airport_coords["LAX"]
     dest_lat, dest_lon = airport_coords[selected_dest]
 
-    # Compute an approximate zoom to ensure we see the entire route
     zoom = approximate_zoom(lax_lat, lax_lon, dest_lat, dest_lon)
 
     fig = go.Figure()
 
-    # (Optional) Show all destinations in gray
     all_codes = list(airport_coords.keys())
     all_lats = [airport_coords[c][0] for c in all_codes]
     all_lons = [airport_coords[c][1] for c in all_codes]
@@ -832,7 +769,6 @@ def update_map(selected_dest):
         name="All Destinations"
     ))
 
-    # Markers for LAX & selected destination
     fig.add_trace(go.Scattermapbox(
         lat=[lax_lat, dest_lat],
         lon=[lax_lon, dest_lon],
@@ -843,7 +779,6 @@ def update_map(selected_dest):
         name="Airports"
     ))
 
-    # The flight path line
     fig.add_trace(go.Scattermapbox(
         lat=[lax_lat, dest_lat],
         lon=[lax_lon, dest_lon],
@@ -884,9 +819,7 @@ def display_page(pathname):
     else:
         return "404: Page Not Found"
 
-########################################
-# 11. Callback to Highlight Selected Carrier
-########################################
+# Callback to Highlight Selected Carrier
 @app.callback(
     Output({"type": "carrier-button", "index": ALL}, "style"),
     Input("selected-carrier-store", "data")
@@ -895,7 +828,7 @@ def highlight_selected_carrier(selected_carrier):
     base_style = {
         "width": "250px",
         "height": "150px",
-        "backgroundColor": "#616161",  # Initial dark gray (adjust if needed)
+        "backgroundColor": "#616161",  
         "border": "none",
         "margin": "0.5rem",
         "display": "flex",
@@ -905,7 +838,7 @@ def highlight_selected_carrier(selected_carrier):
     highlight_style = {
         "width": "250px",
         "height": "150px",
-        "backgroundColor": "#FFC107",  # Dark yellow when selected
+        "backgroundColor": "#FFC107",  
         "border": "2px solid #2196f3",
         "margin": "0.5rem",
         "display": "flex",
@@ -916,9 +849,7 @@ def highlight_selected_carrier(selected_carrier):
         return [base_style] * len(displayed_carriers)
     return [highlight_style if carrier == selected_carrier else base_style for carrier in displayed_carriers]
 
-########################################
-# 12. Callback to Capture Selected Airline (Page 1)
-########################################
+# Callback to Capture Selected Airline
 @app.callback(
     Output("selected-carrier-store", "data"),
     Input({"type": "carrier-button", "index": ALL}, "n_clicks"),
@@ -934,24 +865,23 @@ def update_selected_carrier(n_clicks_list, id_list):
     return selected
 
 @app.callback(
-    Output("flight-details-store", "data", allow_duplicate=True),  # allow_duplicate needed if also updated by other callback
+    Output("flight-details-store", "data", allow_duplicate=True), 
     Input({"type": "dest-button", "index": ALL}, "n_clicks"),
     State({"type": "dest-button", "index": ALL}, "id"),
     State("flight-details-store", "data"),
     prevent_initial_call=True
 )
 def capture_destination(n_clicks_list, id_list, current_data):
-    # If no button was clicked yet, do nothing
     if not dash.callback_context.triggered or all(x is None for x in n_clicks_list):
         raise dash.exceptions.PreventUpdate
     
     # Identify which button was clicked
     triggered_id = dash.callback_context.triggered[0]["prop_id"].split(".")[0]
-    triggered_index = eval(triggered_id)["index"]  # this is the airport_code
+    triggered_index = eval(triggered_id)["index"]
     
     if current_data is None:
         current_data = {}
-    current_data["dest"] = triggered_index  # store the chosen airport
+    current_data["dest"] = triggered_index 
     return current_data
 
 @app.callback(
@@ -972,7 +902,7 @@ def highlight_chosen_dest(flight_data):
     highlight_style = {
         "width": "200px",
         "height": "60px",
-        "backgroundColor": "#FFC107",  # e.g., highlight color
+        "backgroundColor": "#FFC107",
         "border": "2px solid #2196f3",
         "margin": "0.5rem",
         "display": "flex",
@@ -980,7 +910,6 @@ def highlight_chosen_dest(flight_data):
         "justifyContent": "center"
     }
 
-    # If we haven't chosen a destination yet, just return base style for all
     if not flight_data or "dest" not in flight_data:
         return [base_style] * len(unique_destinations)
     
@@ -995,11 +924,7 @@ def highlight_chosen_dest(flight_data):
 
 
 
-########################################
-# 13. Callback to Capture Flight Details from Page 2 and Page 3
-########################################
-# This callback runs on both pages by listening to each input that exists in the layout when active.
-# When an input is missing (because the page isn't loaded), its callback input will be None.
+# Callback to Capture Flight Details from Page 2 and Page 3
 @app.callback(
     Output("flight-details-store", "data", allow_duplicate=True),
     Input('dest', 'value'),
@@ -1014,20 +939,20 @@ def capture_destination(dest, current_data):
 
 @app.callback(
     Output("flight-details-store", "data", allow_duplicate=True),
-    Input("flip-table", "data"),                     # fires on every cell edit
+    Input("flip-table", "data"),                     
     State("flight-details-store", "data"),
     prevent_initial_call=True
 )
 def table_to_store(rows, current):
-    if not rows:                       # sanity check
+    if not rows:                       
         raise dash.exceptions.PreventUpdate
-    row = rows[0]                      # our single “form” row
+    row = rows[0]                     
     store = (current or {}).copy()
     
 
     # simple field mapping
     store.update({
-    "dest":     row.get("dest") or "",        # leave text untouched
+    "dest":     row.get("dest") or "",        
     "dep_hour": to_float(row.get("dep"),      0),
     "month":    to_int  (row.get("month"),    1),
     "day":      to_int  (row.get("day"),      1),
@@ -1047,8 +972,8 @@ def table_to_store(rows, current):
         Input("dep_time",    "value"),
         Input("flight_date", "date"),
         Input("elapsed",     "value"),
-        Input("holiday",     "value"),   # ← fixed
-        Input("weekday",     "value"),   # ← fixed
+        Input("holiday",     "value"),  
+        Input("weekday",     "value"),   
         Input("temp",        "value"),
         Input("rain",        "value"),
         Input("precip",      "value"),
@@ -1075,9 +1000,8 @@ def capture_other_details(dep_time, flight_date_iso,
         current_data["month"] = dt.month
         current_data["day"]   = dt.day
 
-    # store the rest
     current_data["elapsed"]  = elapsed
-    current_data["holiday"]  = int(bool(holiday_bool))   # bool → 0/1
+    current_data["holiday"]  = int(bool(holiday_bool))  
     current_data["weekday"]  = int(bool(weekday_bool))
     current_data["temp"]     = temp
     current_data["rain"]     = rain
@@ -1090,7 +1014,7 @@ def to_int(val, default=0):
     try:
         return int(val)
     except (ValueError, TypeError):
-        return default          # fall back to a sensible default
+        return default        
 
 def to_float(val, default=0.0):
     try:
@@ -1102,10 +1026,8 @@ def to_float(val, default=0.0):
 def capture_flight_details(dest, dep_hour, month, day, elapsed,
                            holiday, weekday, temp, rain, precip, wind,
                            current_data):
-    # Use current_data as a base dictionary
     if current_data is None:
         current_data = {}
-    # Only update if the input exists (is not None)
     if dest is not None:
         current_data["dest"] = dest
     if dep_hour is not None:
@@ -1130,9 +1052,7 @@ def capture_flight_details(dest, dep_hour, month, day, elapsed,
         current_data["wind"] = wind
     return current_data
 
-########################################
-# 14. Final Prediction Callback (Page 4)
-########################################
+# Final Prediction
 
 
 @app.callback(
@@ -1147,20 +1067,19 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
 
     flight_data = flight_data or {}
 
-    # ensure dep_hour -------------------------------------------------------
-    # ensure dep_hour -------------------------------------------------------
+    # ensure dep_hour 
     if "dep_hour" not in flight_data:
-        time_str = flight_data.get("dep_time") or "12:00"   # ← safer
+        time_str = flight_data.get("dep_time") or "12:00"   
         h, m = map(int, time_str.split(":"))
         flight_data["dep_hour"] = h + m / 60
 
 
-    # ensure duration -------------------------------------------------------
+    # ensure duration
     duration_val = flight_data.get("elapsed")
     if duration_val is None:
-        duration_val = 180  # sensible default so the table is never blank     
+        duration_val = 180  
 
-    # ── 1️⃣  Fallback defaults ────────────────────────────────────────────
+    # Fallback defaults
     flight_data = flight_data or {
         "dest":  "JFK", "dep_hour": 12, "month": 1, "day": 1,
         "elapsed": 180, "holiday": 0, "weekday": 1,
@@ -1182,7 +1101,7 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
     "Wind"        : flight_data.get("wind", 10),
 }
 
-    # ── 2️⃣  Model prediction ────────────────────────────────────────────
+    # Model prediction
     model_row = {
     "Carrier Code"                 : user_input["Carrier Code"],
     "destination_airport"          : user_input["Destination"],
@@ -1201,7 +1120,7 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
     table_row = {
     "carrier" : user_input["Carrier Code"],
     "dest"    : user_input["Destination"],
-    "dep"     : user_input["DepHour"],      #  <<< THIS LINE
+    "dep"     : user_input["DepHour"],  
     "month"   : user_input["Month"],
     "day"     : user_input["Day"],
     "duration": user_input["Duration"],
@@ -1241,29 +1160,23 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
         axis=1).reindex(columns=X_balanced.columns, fill_value=0)
     delay_prob = xgb_classifier.predict_proba(X_user_final)[0,1]
 
-    # ── 3️⃣  Flip‑board style table  ──────────────────────────────────────
-    # ── 3️⃣  Flip‑board style table  ─────────────────────────────────────────
+    # Flip‑board style table
     cols = ["carrier", "dest", "dep", "month", "day", "duration",
             "holiday", "weekday", "temp", "rain", "precip", "wind"]
 
-    # Grab the values straight from user_input so we’re 100 % sure they exist
-
-    HIGHLIGHT = "#2196f3"          # material‑blue‑500
-    YELLOW = "#FFD600"   # same yellow you use elsewhere
+    HIGHLIGHT = "#2196f3"      
+    YELLOW = "#FFD600"  
     BLACK  = "#000"
 
     board = dash_table.DataTable(
     id      = "flip-table",
     data    = [table_row],
-    editable = False,           # unchanged
+    editable = False,        
     columns=[
-        # lock the carrier (comes from the logo buttons)
         dict(name="CARRIER",  id="carrier",  editable=False),
 
-        # freeform text is okay for DEST, or use a dropdown (see below)
         dict(name="DEST",     id="dest"),
 
-        # numeric fields – Dash will coerce strings to numbers for you
         dict(name="DEP",      id="dep",      type="numeric"),
         dict(name="MONTH",    id="month",    type="numeric"),
         dict(name="DAY",      id="day",      type="numeric"),
@@ -1282,7 +1195,7 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
         "color"          : "#F7E600",
         "fontFamily"     : "PT Mono, monospace",
         "fontWeight"     : 700,
-        "whiteSpace"     : "normal",   # ← wrap if needed
+        "whiteSpace"     : "normal",   
         "textAlign"      : "center",
         "padding"        : "6px",
     },
@@ -1298,22 +1211,18 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
     },
     page_action="none",
     fixed_rows={"headers": True},
-    css=[                       # ── focus / edit / select styling ──────────
-        # a) cell that currently has the cursor
+    css=[                      
         {"selector": "td.dash-cell.focused, td.dash-cell.dash-cell--focused",
          "rule": f"outline:2px solid {YELLOW} !important;"
                   f"background-color:{BLACK} !important;"
                   f"color:#fff !important;"},
 
-        # b) <input> that appears while you type
         {"selector": ".dash-table-container input.dash-input",
          "rule"    : f"background-color:{BLACK} !important; color:#fff !important;"},
 
-        # c) potential <select> editor
         {"selector": ".dash-table-container select",
          "rule"    : f"background-color:{BLACK} !important; color:#fff !important;"},
 
-        # d) any cell you single‑click (selected state)
         {"selector": "td.dash-cell.column-selected, td.dash-cell.dash-cell--selected",
          "rule"    : f"outline:2px solid {YELLOW} !important;"}
     ],
@@ -1324,17 +1233,16 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
     )
 
 
-    # ── 4️⃣  Gauge ───────────────────────────────────────────────────────
     gauge = go.Figure(
     go.Indicator(
         mode   = "gauge+number",
         value  = delay_prob * 100,
         number = {
             "suffix": "%",
-            "font": {"size": 46, "color": "white"}         # was 64
+            "font": {"size": 46, "color": "white"}       
         },
         title  = {"text": "Delay Probability", "font": {"size": 18, "color": "white"}},
-        domain = {"x": [0, 1], "y": [0.15, 0.80]},  # shrink vertically
+        domain = {"x": [0, 1], "y": [0.15, 0.80]}, 
         gauge  = {
             "shape": "angular",
             "axis": {"range": [0, 100], "visible": False},
@@ -1343,7 +1251,7 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
                 {"range": [30, 70], "color": "#ffe867"},
                 {"range": [70, 100],"color": "#f04b3a"},
             ],
-            "bar": {"color": "#26418f", "thickness": 0.20},   # thinner
+            "bar": {"color": "#26418f", "thickness": 0.20},  
         },
     )
 )
@@ -1352,7 +1260,7 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
     margin=dict(l=0, r=0, t=20, b=0),
     height=220,
     paper_bgcolor="rgba(0,0,0,0)",
-    font=dict(color="white")          # ← default font colour
+    font=dict(color="white")         
 )
 
 
@@ -1373,22 +1281,20 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
         className="glass-card glass-card-dark-bg p-2 mb-3",
     )
 
-    # b. gauge (bottom‑left)
     gauge_card = dbc.Card(
     dcc.Graph(figure=gauge, config={"displayModeBar": False}),
     className="glass-card glass-card-dark-bg p-2"
 )
 
-    # c. map (bottom‑right)
     map_fig   = build_airline_map(
         user_input["Carrier Code"], user_dest=user_input["Destination"]
     )
     map_fig.update_geos(
         showcountries=True,
         showocean=True,
-        bgcolor="#000000",              # full black canvas
+        bgcolor="#000000",             
         oceancolor="#1a1a1a",
-        landcolor="#414141",            # light‑grey land masses
+        landcolor="#414141",           
         countrycolor="#666666",
         coastlinecolor="#888888",
         showlakes=False
@@ -1397,7 +1303,7 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
 
     map_fig.update_layout(
         margin=dict(l=10, r=10, t=40, b=10),
-        height=520,                 # keep the exact height you want
+        height=520,                 
         paper_bgcolor="rgba(0,0,0,0)",
         geo=dict(
             projection_type="equirectangular",
@@ -1417,14 +1323,12 @@ def update_prediction(n_clicks, flight_data, selected_carrier):
         className="glass-card p-2",
     )
 
-    # ── 6️⃣  combine – report on top, gauge + map below ─────────────
     content = dbc.Container(
         fluid=True,
         children=[
-            # top row – full‑width report
+            
             dbc.Row(dbc.Col(report_card, width=12)),
 
-            # bottom row – gauge left, map right
             dbc.Row(
                 [
                     dbc.Col(gauge_card, md=5, className="mb-3"),
@@ -1462,10 +1366,10 @@ app.clientside_callback(
     prevent_initial_call=True
 )
 def toggle_edit(_, is_editing):
-    is_editing = not is_editing               # flip the mode
+    is_editing = not is_editing               
     return (
-        is_editing,                           # store (True / False)
-        dash.no_update,                       # ⇽ leave the label alone
+        is_editing,                           
+        dash.no_update,                      
         "success" if is_editing else "secondary"
     )
 
@@ -1476,8 +1380,7 @@ def toggle_edit(_, is_editing):
 def set_editable(is_editing):
     return is_editing
 
-########################################
-# 15. Run the App
-########################################
+# Run
+
 if __name__ == '__main__':
     app.run(debug=True)
