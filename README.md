@@ -1,3 +1,41 @@
+✈️ LAX Flight Delay Predictor
+
+
+
+
+
+
+A Python-based web application that leverages machine learning and weather data to estimate the probability of flight delays for departures from Los Angeles International Airport (LAX).
+
+📸 Screenshots
+<p align="center"> <img src="https://github.com/user-attachments/assets/9645664a-7ab6-43d2-8957-d82bf1dbaabd" width="300" height="150" /> <img src="https://github.com/user-attachments/assets/480858af-57d6-4e30-8ac3-1fd0f724aa41" width="300" height="150" /> </p> <p align="center"> <img src="https://github.com/user-attachments/assets/7f1f63cc-9213-4e1a-8bac-04ac68f2c5a0" width="300" height="150" /> <img src="https://github.com/user-attachments/assets/980484d3-5657-4571-9be4-c35046d0638e" width="300" height="150" /> <img src="https://github.com/user-attachments/assets/b583d295-be84-45c2-93be-89a5abb248e4" width="300" height="150" /> </p>
+📝 Description
+
+The LAX Flight Delay Predictor is a data-driven dashboard that uses historical flight records (2021–2024) combined with local weather conditions to model flight delay probabilities.
+
+Trains an XGBoost classifier to detect patterns in flight delays
+
+Presents results through an interactive Dash web app
+
+Helps users make informed travel decisions with visual insights
+
+Users interact with a guided, multi-page interface to:
+
+Select their airline
+
+Choose a destination airport
+
+Enter flight details (date, time, duration, weather, holiday/weekday)
+
+View a prediction report with:
+
+✅ Delay probability gauge
+
+✅ Summary statistics table
+
+✅ Route visualization map
+
+
 <img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/9645664a-7ab6-43d2-8957-d82bf1dbaabd" />
 <img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/480858af-57d6-4e30-8ac3-1fd0f724aa41" />
 <img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/7f1f63cc-9213-4e1a-8bac-04ac68f2c5a0" />
