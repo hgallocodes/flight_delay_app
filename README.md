@@ -9,15 +9,20 @@ INSTALLATION
 1. Clone the repository:
 
 	git clone https://github.com/YOURUSERNAME/flight_delay_app
+
 	cd flight_delay_app
 
-2. Create a virtual environment and install dependencies:
+3. Create a virtual environment and install dependencies:
 
 	python3 -m venv venv
+
 	source venv/bin/activate    # On Windows: venv\\Scripts\\activate
+
 	pip install --upgrade pip
+
 	pip install -r requirements.txt
-3. Ensure the data/ directory contains the required CSV files:
+
+5. Ensure the data/ directory contains the required CSV files:
 
 	- Airline datasets: AA.csv, AS.csv, DL.csv, UA.csv, WN.csv, SA.csv, JB.csv
 	- LA weather: la_weather.csv (with header rows trimmed)
