@@ -7,6 +7,12 @@
 
 A Python-based web application that leverages machine learning and weather data to estimate the probability of flight delays for departures from Los Angeles International Airport (LAX).
 
+DESCRIPTION
+
+The LAX Flight Delay Predictor is a Python-based web application that leverages machine learning and weather data to estimate the probability of flight delays for departures from Los Angeles International Airport (LAX). Using historical flight records (2021–2024) combined with local weather conditions, the system trains an XGBoost classifier to model delay patterns and serves predictions through an interactive Dash dashboard.
+
+Users interact with a guided, multi-page interface to select their airline, choose a destination airport, and specify flight details such as departure time, date, duration, and weather parameters. The app then displays the predicted delay probability with a gauge, a summary report table, and a route map, offering actionable insights for travelers.
+
 📸 Screenshots
 <p align="center"> <img src="https://github.com/user-attachments/assets/9645664a-7ab6-43d2-8957-d82bf1dbaabd" width="300" height="150" /> <img src="https://github.com/user-attachments/assets/480858af-57d6-4e30-8ac3-1fd0f724aa41" width="300" height="150" /> </p> <p align="center"> <img src="https://github.com/user-attachments/assets/7f1f63cc-9213-4e1a-8bac-04ac68f2c5a0" width="300" height="150" /> <img src="https://github.com/user-attachments/assets/980484d3-5657-4571-9be4-c35046d0638e" width="300" height="150" /> <img src="https://github.com/user-attachments/assets/b583d295-be84-45c2-93be-89a5abb248e4" width="300" height="150" /> </p>
 📝 Description
@@ -36,95 +42,6 @@ View a prediction report with:
 ✅ Route visualization map
 
 ⚙️ Installation
-
-Clone the repository:
-
-git clone https://github.com/YOURUSERNAME/flight_delay_app
-cd flight_delay_app
-
-
-Create and activate a virtual environment:
-
-python3 -m venv venv
-source venv/bin/activate     # macOS/Linux
-# venv\Scripts\activate      # Windows
-
-
-Install dependencies:
-
-pip install --upgrade pip
-pip install -r requirements.txt
-
-
-Ensure the data/ directory contains the required CSV files:
-
-Airline datasets: AA.csv, AS.csv, DL.csv, UA.csv, WN.csv, SA.csv, JB.csv
-
-LAX weather: la_weather.csv (with header rows trimmed)
-
-Airport database: GlobalAirportDatabase.txt
-
-▶️ Execution
-
-Activate your environment (if not already active):
-
-source venv/bin/activate     # macOS/Linux
-# venv\Scripts\activate      # Windows
-
-
-Run the app:
-
-python app.py
-
-
-Open a browser at 👉 http://127.0.0.1:8050
-
-Follow the steps in the app:
-
-Pick an airline via logo buttons
-
-Choose a destination airport
-
-Enter flight details
-
-View the delay probability, summary, and route map
-
-🛠 Tech Stack
-
-Frontend: Dash, Dash Bootstrap Components, Plotly
-
-Backend: Flask
-
-ML Model: XGBoost, Scikit-Learn
-
-Data: FAA flight records (2021–2024), Weather data, U.S. Holidays
-
-🚀 Future Enhancements
-
-Expand beyond LAX to multiple airports
-
-Real-time weather API integration
-
-Add delay cause classification
-
-✨ Plan smarter. Travel better. With data.
-
-<img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/9645664a-7ab6-43d2-8957-d82bf1dbaabd" />
-<img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/480858af-57d6-4e30-8ac3-1fd0f724aa41" />
-<img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/7f1f63cc-9213-4e1a-8bac-04ac68f2c5a0" />
-<img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/980484d3-5657-4571-9be4-c35046d0638e" />
-<img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/b583d295-be84-45c2-93be-89a5abb248e4" />
-
-
-
-
-
-
-DESCRIPTION
-
-The LAX Flight Delay Predictor is a Python-based web application that leverages machine learning and weather data to estimate the probability of flight delays for departures from Los Angeles International Airport (LAX). Using historical flight records (2021–2024) combined with local weather conditions, the system trains an XGBoost classifier to model delay patterns and serves predictions through an interactive Dash dashboard.
-
-Users interact with a guided, multi-page interface to select their airline, choose a destination airport, and specify flight details such as departure time, date, duration, and weather parameters. The app then displays the predicted delay probability with a gauge, a summary report table, and a route map, offering actionable insights for travelers.
 
 INSTALLATION
 
@@ -174,5 +91,13 @@ EXECUTION
 
 Enjoy exploring and planning your flights with data-driven insights!
 
+🛠 Tech Stack
 
+Frontend: Dash, Dash Bootstrap Components, Plotly
+
+Backend: Flask
+
+ML Model: XGBoost, Scikit-Learn
+
+Data: FAA flight records (2021–2024), Weather data, U.S. Holidays
 
