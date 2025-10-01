@@ -35,6 +35,79 @@ View a prediction report with:
 
 ✅ Route visualization map
 
+⚙️ Installation
+
+Clone the repository:
+
+git clone https://github.com/YOURUSERNAME/flight_delay_app
+cd flight_delay_app
+
+
+Create and activate a virtual environment:
+
+python3 -m venv venv
+source venv/bin/activate     # macOS/Linux
+# venv\Scripts\activate      # Windows
+
+
+Install dependencies:
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
+
+Ensure the data/ directory contains the required CSV files:
+
+Airline datasets: AA.csv, AS.csv, DL.csv, UA.csv, WN.csv, SA.csv, JB.csv
+
+LAX weather: la_weather.csv (with header rows trimmed)
+
+Airport database: GlobalAirportDatabase.txt
+
+▶️ Execution
+
+Activate your environment (if not already active):
+
+source venv/bin/activate     # macOS/Linux
+# venv\Scripts\activate      # Windows
+
+
+Run the app:
+
+python app.py
+
+
+Open a browser at 👉 http://127.0.0.1:8050
+
+Follow the steps in the app:
+
+Pick an airline via logo buttons
+
+Choose a destination airport
+
+Enter flight details
+
+View the delay probability, summary, and route map
+
+🛠 Tech Stack
+
+Frontend: Dash, Dash Bootstrap Components, Plotly
+
+Backend: Flask
+
+ML Model: XGBoost, Scikit-Learn
+
+Data: FAA flight records (2021–2024), Weather data, U.S. Holidays
+
+🚀 Future Enhancements
+
+Expand beyond LAX to multiple airports
+
+Real-time weather API integration
+
+Add delay cause classification
+
+✨ Plan smarter. Travel better. With data.
 
 <img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/9645664a-7ab6-43d2-8957-d82bf1dbaabd" />
 <img width="300" height="150" alt="image" src="https://github.com/user-attachments/assets/480858af-57d6-4e30-8ac3-1fd0f724aa41" />
