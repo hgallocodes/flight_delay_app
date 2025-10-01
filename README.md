@@ -56,5 +56,5 @@ EXECUTION
    - Choose your destination airport.
      
    - Enter flight details: date, departure time, duration, holiday/weekday, and weather sliders.
-     
-   - View the delay probability, data summary, and route map on the final page. Enjoy exploring and planning your flights with data-driven insights!
+
+View the delay probability, data summary, and route map on the final page. Enjoy exploring and planning your flights with data-driven insights!
