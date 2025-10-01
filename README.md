@@ -1,3 +1,6 @@
+<img width="1435" height="724" alt="image" src="https://github.com/user-attachments/assets/9645664a-7ab6-43d2-8957-d82bf1dbaabd" />
+
+
 DESCRIPTION
 
 The LAX Flight Delay Predictor is a Python-based web application that leverages machine learning and weather data to estimate the probability of flight delays for departures from Los Angeles International Airport (LAX). Using historical flight records (2021–2024) combined with local weather conditions, the system trains an XGBoost classifier to model delay patterns and serves predictions through an interactive Dash dashboard.
